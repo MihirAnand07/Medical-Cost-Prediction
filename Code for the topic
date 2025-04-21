@@ -1,1 +1,106 @@
 
+# 🧠 Medical Cost Prediction using Supervised Machine Learning
+
+# BMI Calculator
+def calculate_bmi(weight_kg, height_m):
+    return weight_kg / (height_m ** 2)
+print("Sample BMI Calculation:", calculate_bmi(70, 1.75))
+
+# Imports
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from pandas.plotting import scatter_matrix
+from scipy.stats import ttest_ind, shapiro, chi2_contingency
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+# Load Data
+df = pd.read_csv("insurance.csv")
+print(df.head())
+print("\nMissing values:\n", df.isnull().sum())
+
+# Visualization
+sns.boxplot(x="smoker", y="charges", data=df)
+plt.title("Charges by Smoker Status")
+plt.show()
+
+sns.heatmap(df.corr(numeric_only=True), annot=True)
+plt.title("Correlation Heatmap")
+plt.show()
+
+print(df.describe())
+sns.boxplot(data=df[['bmi', 'charges']])
+plt.title("Outliers in BMI and Charges")
+plt.show()
+
+# Pairplot & Matrix Visuals
+sns.pairplot(df, hue='smoker')
+plt.suptitle("Pairplot of Features", y=1.02)
+plt.show()
+
+scatter_matrix(df[['age', 'bmi', 'children', 'charges']], figsize=(10, 10), diagonal='kde')
+plt.suptitle("Scatter Matrix", y=1.02)
+plt.show()
+
+sns.pairplot(df, kind="kde", hue="smoker")
+plt.suptitle("Distribution Matrix with KDE", y=1.02)
+plt.show()
+
+# Statistical Tests
+smokers = df[df['smoker'] == 'yes']['charges']
+non_smokers = df[df['smoker'] == 'no']['charges']
+t_stat, p_val = ttest_ind(smokers, non_smokers)
+print("T-test p-value:", p_val)
+
+shapiro_stat, shapiro_p = shapiro(df['charges'])
+print("Shapiro-Wilk p-value:", shapiro_p)
+
+contingency = pd.crosstab(df['region'], df['smoker'])
+chi2, p, dof, _ = chi2_contingency(contingency)
+print("Chi-squared p-value:", p)
+
+# Encoding & Splitting
+df_encoded = pd.get_dummies(df, drop_first=True)
+X = df_encoded.drop("charges", axis=1)
+y = df_encoded["charges"]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Linear Regression
+lr = LinearRegression()
+lr.fit(X_train, y_train)
+y_pred_lr = lr.predict(X_test)
+
+print("\nLinear Regression:")
+print("MAE:", mean_absolute_error(y_test, y_pred_lr))
+print("RMSE:", np.sqrt(mean_squared_error(y_test, y_pred_lr)))
+print("R2 Score:", r2_score(y_test, y_pred_lr))
+
+# Random Forest
+rf = RandomForestRegressor()
+rf.fit(X_train, y_train)
+y_pred_rf = rf.predict(X_test)
+
+print("\nRandom Forest:")
+print("MAE:", mean_absolute_error(y_test, y_pred_rf))
+print("RMSE:", np.sqrt(mean_squared_error(y_test, y_pred_rf)))
+print("R2 Score:", r2_score(y_test, y_pred_rf))
+
+# Actual vs Predicted Plot
+plt.figure(figsize=(8, 5))
+plt.scatter(y_test, y_pred_lr, alpha=0.5, label="Linear Regression")
+plt.plot([y.min(), y.max()], [y.min(), y.max()], color='red', linestyle='--', label="Ideal")
+plt.xlabel("Actual Charges")
+plt.ylabel("Predicted Charges")
+plt.title("Actual vs Predicted Charges")
+plt.legend()
+plt.show()
+
+# Generative AI Trends
+print("\nGenerative AI in Healthcare:")
+print("• GPT-4 can summarize EHRs and assist in diagnosis.")
+print("• DALL·E can generate synthetic medical imagery.")
+print("• Synthetic data generation helps improve ML model performance.")
